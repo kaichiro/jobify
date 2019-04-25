@@ -13,7 +13,7 @@ const dbConnection = sqllite.open("banco.sqlite", { Promise });
 // endregion
 
 // region Global Variables
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 // endregion
 
 app.set("view engine", "ejs");
