@@ -5,8 +5,8 @@
             "src": "index.js",
             "use": "@now/node-server"
         }
-    ],
-    "routes": [
+    ]
+    , "routes": [
         {
             "src": "/.*",
             "dest": "index.js"
