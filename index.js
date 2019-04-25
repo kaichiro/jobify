@@ -9,8 +9,12 @@ const bodyParser = require("body-parser");
 
 // region SQLite
 const sqllite = require("sqlite");
-const dbConnection = sqllite.open("banco.sqlite", { Promise });
+const dbConnection = sqllite.open(path.resolve(__dirname, "banco.sqlite"), {
+  Promise
+});
 // endregion
+
+const path = require("path");
 
 // region Global Variables
 const PORT = process.env.PORT || 3000;
