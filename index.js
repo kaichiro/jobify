@@ -59,9 +59,67 @@ app.get("/admin", (req, res) => {
   res.render("admin/home");
 });
 
+//region CRUD categorias
+app.get("/admin/categorias", async (req, res) => {
+  const db = await dbConnection;
+  const categorias = await db.all(
+    "SELECT " +
+      "c.id, c.categoria, count(v.id) quantidadeVagas " +
+      "from categorias c " +
+      "left join vagas v on c.id = v.categoria " +
+      "group by c.id, c.categoria " +
+      "order by count(v.id) desc "
+  );
+  res.render("admin/categorias", { categorias });
+});
+
+app.get("/admin/categorias/nova", async (req, res) => {
+  res.render("admin/nova-categoria");
+});
+app.post("/admin/categorias/nova", async (req, res) => {
+  const { categoria } = req.body;
+  const db = await dbConnection;
+  await db.run(`insert into categorias (categoria) values ('${categoria}');`);
+  res.redirect("/admin/categorias");
+});
+
+app.get("/admin/categorias/editar/:id", async (req, res) => {
+  const db = await dbConnection;
+  const categoria = await db.get(
+    `select c.id, c.categoria from categorias c where c.id = ${req.params.id}`
+  );
+  const { id } = req.params;
+  const vagas = await db.all(
+    `select v.titulo from vagas v where v.categoria = ${id}`
+  );
+  res.render("admin/editar-categoria", { categoria, vagas });
+});
+app.post("/admin/categorias/editar/:id", async (req, res) => {
+  const { categoria } = req.body;
+  const { id } = req.params;
+  const db = await dbConnection;
+  await db.run(
+    `update categorias set categoria = '${categoria}' where id = ${id};`
+  );
+  res.redirect("/admin/categorias");
+});
+
+app.get("/admin/categorias/delete/:id", async (req, res) => {
+  const db = await dbConnection;
+  await db.run(`delete from categorias where id = ${req.params.id};`);
+  res.redirect("/admin/categorias");
+});
+//endregion
+
+// region CRUD Vagas
 app.get("/admin/vagas", async (req, res) => {
   const db = await dbConnection;
-  const vagas = await db.all("select * from vagas;");
+  const vagas = await db.all(
+    "select " +
+      "vagas.id, vagas.categoria, vagas.titulo, categorias.categoria categoriaDescricao " +
+      "from vagas " +
+      "left join categorias on vagas.categoria = categorias.id;"
+  );
   res.render("admin/vagas", { vagas });
 });
 
@@ -71,7 +129,6 @@ app.get("/admin/vagas/delete/:id", async (req, res) => {
   res.redirect("/admin/vagas");
 });
 
-// region CRUD Vagas
 app.get("/admin/vagas/nova", async (req, res) => {
   const db = await dbConnection;
   const categorias = await db.all("select c.* from categorias c");
@@ -89,7 +146,9 @@ app.post("/admin/vagas/nova", async (req, res) => {
 app.get("/admin/vagas/editar/:id", async (req, res) => {
   const db = await dbConnection;
   const categorias = await db.all("select c.* from categorias c");
-  const vaga = await db.get(`select * from vagas where id = ${req.params.id}`);
+  const vaga = await db.get(
+    `select v.* from vagas v where v.id = ${req.params.id}`
+  );
   res.render("admin/editar-vaga", { categorias, vaga });
 });
 app.post("/admin/vagas/editar/:id", async (req, res) => {
